@@ -1,0 +1,209 @@
+/* General */
+.dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 1rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: white;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Loader */
+.dashboard-loader {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #fff;
+  border-top: 4px solid #764ba2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cards */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Header */
+.header-card {
+  padding: 0;
+  overflow: hidden;
+}
+.header-banner {
+  height: 120px;
+  background: linear-gradient(to right, #edf0fa, #ddc1f9);
+}
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  margin-top: -40px;
+}
+.avatar-box {
+  background: white;
+  padding: 12px;
+  border-radius: 50%;
+}
+.avatar {
+  width: 64px;
+  height: 64px;
+  color: #764ba2;
+}
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+.header-card h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0 1.5rem;
+}
+.header-card .email {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem 1.5rem;
+  color: #ddd;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+.job h3 {
+  font-weight: bold;
+}
+.job .company {
+  color: #ddd;
+}
+.job .details {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+/* Skills */
+.skill {
+  margin-bottom: 1rem;
+}
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+}
+.skill-bar {
+  background: rgba(255, 255, 255, 0.3);
+  height: 6px;
+  border-radius: 6px;
+}
+.skill-bar div {
+  background: white;
+  height: 6px;
+  border-radius: 6px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  max-height: 50px;
+  gap: 6px;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+.btn.edit {
+  background: #667eea;
+  border: 2px solid rgba(255, 255, 255, 0.467);
+  color: white;
+}
+.btn.delete {
+  background: #e63946;
+  color: white;
+}
+.btn.save {
+  background: #22c55e;
+  color: white;
+}
+.btn.cancel {
+  background: gray;
+  color: white;
+}
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* Links */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: 0.3s;
+  color: white;
+}
+.link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Edit Form */
+.edit-card input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.form-grid .col-span {
+  grid-column: span 2;
+}
+.btn-group {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+
+@media (max-width:768px) {
+  .grid{
+    grid-template-columns: 2fr;
+  }
+  .avatar{
+    width: 45px;
+    height: 45px;
+  }
+}
