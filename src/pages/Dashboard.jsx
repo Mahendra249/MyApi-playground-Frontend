@@ -42,6 +42,35 @@ const Dashboard = () => {
           location: "New York, NY",
         },
       ],
+      projects: [
+        {
+          id: 1,
+          title: "E-Commerce Platform",
+          description:
+            "Developed a scalable online shopping platform with product catalog, cart, payment gateway integration, and admin dashboard.",
+          skills: [
+            "React.js",
+            "Node.js",
+            "Express.js",
+            "MongoDB",
+            "Stripe API",
+          ],
+        },
+        {
+          id: 2,
+          title: "Authentication System (Authify)",
+          description:
+            "Built a secure authentication system with JWT, role-based access control, and MongoDB integration.",
+          skills: ["Node.js", "Express.js", "MongoDB", "JWT", "React.js"],
+        },
+        {
+          id: 3,
+          title: "Portfolio Website",
+          description:
+            "Personal portfolio showcasing projects, skills, and experience with responsive UI and animations.",
+          skills: ["Next.js", "Tailwind CSS", "Framer Motion"],
+        },
+      ],
       links: {
         github: "https://github.com/alexjohnson",
         linkedin: "https://linkedin.com/in/alexjohnson",
@@ -171,7 +200,6 @@ const Dashboard = () => {
               >
                 <Edit /> Edit Profile
               </button>
-             
             </div>
           </div>
           <h1>{profile.name}</h1>
@@ -196,13 +224,17 @@ const Dashboard = () => {
               <h2>
                 <Briefcase /> My Projects
               </h2>
-              {profile.workExperience.map((job) => (
-                <div key={job.id} className="job">
-                  <h3>{job.position}</h3>
-                  <p className="company">{job.company}</p>
-                  <p className="details">
-                    <Calendar /> {job.duration} | <MapPin /> {job.location}
-                  </p>
+              {profile.projects.map((project) => (
+                <div key={project.id} className="project">
+                  <h3>{project.title}</h3>
+                  <p className="description">{project.description}</p>
+                  <div className="skills">
+                    {project.skills.map((skill, i) => (
+                      <span key={i} className="skill-tag">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
