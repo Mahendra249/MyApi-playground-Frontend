@@ -14,8 +14,9 @@ const Home = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      alert(`Searching for "${searchQuery}" in ${searchType}`);
+      console.log(`Searching for "${searchQuery}" in ${searchType}`);
     }
+    navigate("/search");
   };
 
   const featuredProfiles = [
@@ -24,7 +25,7 @@ const Home = () => {
       role: "Full Stack Developer",
       skills: ["React", "Node.js", "Python"],
       image:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b789?w=80&h=80&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z2lybHN8ZW58MHx8MHx8fDA%3D",
     },
     {
       name: "Alex Johnson",
@@ -103,15 +104,12 @@ const Home = () => {
           {/* Action Buttons */}
           <div className="action-buttons">
             <button
-              onClick={() => alert("Creating new profile...")}
+              onClick={() => navigate("/createProfile")}
               className="create-btn"
             >
               Create Profile
             </button>
-            <button
-              onClick={() => alert("Browsing profiles...")}
-              className="browse-btn"
-            >
+            <button onClick={() => navigate("/search")} className="browse-btn">
               Browse Profiles
             </button>
           </div>

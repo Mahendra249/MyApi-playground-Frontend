@@ -11,8 +11,10 @@ import {
   Trash2,
   MapPin,
   Calendar,
+  CircleChevronLeft,
 } from "lucide-react";
 import "../styles/Dashboard.css";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [profile, setProfile] = useState(null);
@@ -103,6 +105,7 @@ const Dashboard = () => {
       alert("Profile deleted successfully!");
     }
   };
+  const navigate = useNavigate();
 
   const getLinkIcon = (type) => {
     switch (type) {
@@ -125,68 +128,26 @@ const Dashboard = () => {
     );
   }
 
-  if (showEditForm) {
-    return (
-      <div className="dashboard">
-        <div className="dashboard-container">
-          <div className="card edit-card">
-            <h2>Edit Profile</h2>
-            <div className="form-grid">
-              <div>
-                <label>Name</label>
-                <input
-                  type="text"
-                  value={editFormData.name || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={editFormData.email || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="col-span">
-                <label>Education</label>
-                <input
-                  type="text"
-                  value={editFormData.education || ""}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      education: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="btn-group">
-              <button className="btn save" onClick={handleEditProfile}>
-                Save Changes
-              </button>
-              <button
-                className="btn cancel"
-                onClick={() => setShowEditForm(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard">
       <div className="dashboard-container">
         {/* Header */}
+        <div
+          className="back-box"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            cursor: "pointer",
+            position: "absolute",
+            left: "1rem",
+            top:"0.6rem"
+          }}
+        >
+          <div onClick={() => navigate("/")}>
+            <CircleChevronLeft />
+          </div>
+        </div>
         <div className="card header-card">
           <div className="header-banner"></div>
           <div className="header-content">
@@ -196,7 +157,7 @@ const Dashboard = () => {
             <div className="header-actions">
               <button
                 className="btn edit"
-                onClick={() => setShowEditForm(true)}
+                onClick={() => navigate("/updateProfile")}
               >
                 <Edit /> Edit Profile
               </button>
