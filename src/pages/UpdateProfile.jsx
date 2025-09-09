@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
-  GraduationCap,
   Code,
   Briefcase,
   Github,
@@ -12,8 +11,14 @@ import {
   CircleChevronLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { fetchData, postData, updateData } from "../api/ClientFunction";
+import useSWR from "swr";
+import { toast } from "react-toastify";
+import "../styles/UpdateProfile.css"; // <-- CSS file
 
 const UpdateProfile = () => {
+  const { data:profiledata } = useSWR(`/profile`, fetchData);
+  const [isLoading, setIsLoading] = useState(false);
   const [showEditForm, setShowEditForm] = useState(true);
   const [editFormData, setEditFormData] = useState({
     name: "",
@@ -22,84 +27,79 @@ const UpdateProfile = () => {
     skills: [""],
     projects: [{ title: "", description: "", link: [""] }],
     work: [""],
-    links: {
-      github: "",
-      linkedin: "",
-      portfolio: "",
-    },
+    links: { github: "", linkedin: "", portfolio: "" },
   });
+  const data = profiledata?.data;
+
   const navigate = useNavigate();
 
-  const handleEditProfile = () => {
-    console.log("Updated Profile Data:", editFormData);
-    // Here you would send the data to your backend API
-    alert("Profile updated successfully!");
-    setShowEditForm(false);
+  useEffect(() => {
+    if (data) {
+      setEditFormData({
+        name: data.name || "",
+        email: data.email || "",
+        education: data.education || "",
+        skills: data.skills?.length ? data.skills : [""],
+        projects: data.projects?.length
+          ? data.projects
+          : [{ title: "", description: "", link: [""] }],
+        work: data.work?.length ? data.work : [""],
+        links: {
+          github: data.links?.github || "",
+          linkedin: data.links?.linkedin || "",
+          portfolio: data.links?.portfolio || "",
+        },
+      });
+    }
+  }, [data]);
+
+  const handleEditProfile = async () => {
+    setIsLoading(true);
+    const response = await updateData("/updateProfile", editFormData);
+    if (response?.success) {
+      toast.success(response.message || "Profile Updated");
+      navigate("/dashboard");
+    } else {
+      toast.error(response?.message || "Failed to update profile");
+    }
+    setIsLoading(false);
   };
 
-  // Handle skills array changes
-  const handleSkillChange = (index, value) => {
-    const updatedSkills = editFormData.skills.map((skill, i) =>
-      i === index ? value : skill
-    );
-    setEditFormData({ ...editFormData, skills: updatedSkills });
+  // skills
+  const handleSkillChange = (i, v) => {
+    const s = [...editFormData.skills];
+    s[i] = v;
+    setEditFormData({ ...editFormData, skills: s });
   };
-
-  const addSkill = () => {
+  const addSkill = () =>
+    setEditFormData({ ...editFormData, skills: [...editFormData.skills, ""] });
+  const removeSkill = (i) =>
     setEditFormData({
       ...editFormData,
-      skills: [...editFormData.skills, ""],
+      skills: editFormData.skills.filter((_, idx) => idx !== i),
     });
-  };
 
-  const removeSkill = (index) => {
-    const updatedSkills = editFormData.skills.filter((_, i) => i !== index);
-    setEditFormData({ ...editFormData, skills: updatedSkills });
+  // work
+  const handleWorkChange = (i, v) => {
+    const w = [...editFormData.work];
+    w[i] = v;
+    setEditFormData({ ...editFormData, work: w });
   };
-
-  // Handle work array changes
-  const handleWorkChange = (index, value) => {
-    const updatedWork = editFormData.work.map((workItem, i) =>
-      i === index ? value : workItem
-    );
-    setEditFormData({ ...editFormData, work: updatedWork });
-  };
-
-  const addWork = () => {
+  const addWork = () =>
+    setEditFormData({ ...editFormData, work: [...editFormData.work, ""] });
+  const removeWork = (i) =>
     setEditFormData({
       ...editFormData,
-      work: [...editFormData.work, ""],
+      work: editFormData.work.filter((_, idx) => idx !== i),
     });
-  };
 
-  const removeWork = (index) => {
-    const updatedWork = editFormData.work.filter((_, i) => i !== index);
-    setEditFormData({ ...editFormData, work: updatedWork });
+  // projects
+  const handleProjectChange = (pi, f, v) => {
+    const p = [...editFormData.projects];
+    p[pi][f] = v;
+    setEditFormData({ ...editFormData, projects: p });
   };
-
-  // Handle project changes
-  const handleProjectChange = (projectIndex, field, value) => {
-    const updatedProjects = editFormData.projects.map((project, i) =>
-      i === projectIndex ? { ...project, [field]: value } : project
-    );
-    setEditFormData({ ...editFormData, projects: updatedProjects });
-  };
-
-  const handleProjectLinkChange = (projectIndex, linkIndex, value) => {
-    const updatedProjects = editFormData.projects.map((project, i) =>
-      i === projectIndex
-        ? {
-            ...project,
-            link: project.link.map((link, j) =>
-              j === linkIndex ? value : link
-            ),
-          }
-        : project
-    );
-    setEditFormData({ ...editFormData, projects: updatedProjects });
-  };
-
-  const addProject = () => {
+  const addProject = () =>
     setEditFormData({
       ...editFormData,
       projects: [
@@ -107,383 +107,230 @@ const UpdateProfile = () => {
         { title: "", description: "", link: [""] },
       ],
     });
-  };
-
-  const removeProject = (index) => {
-    const updatedProjects = editFormData.projects.filter((_, i) => i !== index);
-    setEditFormData({ ...editFormData, projects: updatedProjects });
-  };
-
-  const addProjectLink = (projectIndex) => {
-    const updatedProjects = editFormData.projects.map((project, i) =>
-      i === projectIndex ? { ...project, link: [...project.link, ""] } : project
-    );
-    setEditFormData({ ...editFormData, projects: updatedProjects });
-  };
-
-  const removeProjectLink = (projectIndex, linkIndex) => {
-    const updatedProjects = editFormData.projects.map((project, i) =>
-      i === projectIndex
-        ? { ...project, link: project.link.filter((_, j) => j !== linkIndex) }
-        : project
-    );
-    setEditFormData({ ...editFormData, projects: updatedProjects });
-  };
-
-  // Handle social links changes
-  const handleLinksChange = (linkType, value) => {
+  const removeProject = (i) =>
     setEditFormData({
       ...editFormData,
-      links: { ...editFormData.links, [linkType]: value },
+      projects: editFormData.projects.filter((_, idx) => idx !== i),
+    });
+  const handleProjectLinkChange = (pi, li, v) => {
+    const p = [...editFormData.projects];
+    p[pi].link[li] = v;
+    setEditFormData({ ...editFormData, projects: p });
+  };
+  const addProjectLink = (pi) => {
+    const p = [...editFormData.projects];
+    p[pi].link.push("");
+    setEditFormData({ ...editFormData, projects: p });
+  };
+  const removeProjectLink = (pi, li) => {
+    const p = [...editFormData.projects];
+    p[pi].link.splice(li, 1);
+    setEditFormData({ ...editFormData, projects: p });
+  };
+
+  // links
+  const handleLinksChange = (t, v) => {
+    setEditFormData({
+      ...editFormData,
+      links: { ...editFormData.links, [t]: v },
     });
   };
 
-  if (!showEditForm) {
-    return <div>Edit form is closed</div>;
-  }
+  if (!showEditForm) return <div>Edit form closed</div>;
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div
-          className="back-box"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            cursor: "pointer",
-            position: "absolute",
-            left: "1rem",
-            top: "0.6rem",
-          }}
-        >
-          <div onClick={() => navigate("/dashboard")}>
-            <CircleChevronLeft />
+    <div className="updateProfile">
+      <div className="updateProfile-header">
+        <div className="back-btn" onClick={() => navigate("/dashboard")}>
+          <CircleChevronLeft size={22} /> Back
+        </div>
+        <h2>
+          <User size={22} /> Edit Profile
+        </h2>
+      </div>
+
+      <div className="updateProfile-body">
+        {/* Basic Info */}
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Name</label>
+            <input
+              type="text"
+              value={editFormData.name}
+              onChange={(e) =>
+                setEditFormData({ ...editFormData, name: e.target.value })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={editFormData.email}
+              onChange={(e) =>
+                setEditFormData({ ...editFormData, email: e.target.value })
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Education</label>
+            <input
+              type="text"
+              value={editFormData.education}
+              onChange={(e) =>
+                setEditFormData({ ...editFormData, education: e.target.value })
+              }
+            />
           </div>
         </div>
-        <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-          <div className="bg-black text-white p-6">
-            <h2 className="text-2xl font-bold flex items-center">
-              <User className="mr-3" size={24} />
-              Edit Profile
-            </h2>
-          </div>
 
-          <div className="p-8 space-y-8">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.name || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, name: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={editFormData.email || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, email: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Education
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.education || ""}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      education: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                  placeholder="Your educational background"
-                />
-              </div>
-            </div>
-
-            {/* Skills Section */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Code className="mr-2" size={20} />
-                Skills
-              </h3>
-              <div className="space-y-3">
-                {editFormData.skills.map((skill, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={skill}
-                      onChange={(e) => handleSkillChange(index, e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                      placeholder="Enter a skill"
-                    />
-                    {editFormData.skills.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSkill(index)}
-                        className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="flex items-center text-black hover:text-gray-700 transition-colors text-sm"
-                >
-                  <Plus size={16} className="mr-1" />
-                  Add Skill
+        {/* Skills */}
+        <div className="card">
+          <h3>
+            <Code size={18} /> Skills
+          </h3>
+          {editFormData.skills.map((skill, i) => (
+            <div key={i} className="inline-input">
+              <input
+                type="text"
+                value={skill}
+                onChange={(e) => handleSkillChange(i, e.target.value)}
+                placeholder="Enter skill"
+              />
+              {editFormData.skills.length > 1 && (
+                <button onClick={() => removeSkill(i)}>
+                  <X size={14} />
                 </button>
-              </div>
+              )}
             </div>
+          ))}
+          <button className="add-btn" onClick={addSkill}>
+            <Plus size={14} /> Add Skill
+          </button>
+        </div>
 
-            {/* Projects Section */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Code className="mr-2" size={20} />
-                Projects
-              </h3>
-              <div className="space-y-6">
-                {editFormData.projects.map((project, projectIndex) => (
-                  <div
-                    key={projectIndex}
-                    className="bg-gray-50 p-4 rounded-lg border"
-                  >
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-medium text-gray-800">
-                        Project {projectIndex + 1}
-                      </h4>
-                      {editFormData.projects.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeProject(projectIndex)}
-                          className="text-gray-500 hover:text-red-600 transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={project.title}
-                        onChange={(e) =>
-                          handleProjectChange(
-                            projectIndex,
-                            "title",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                        placeholder="Project title"
-                      />
-
-                      <textarea
-                        value={project.description}
-                        onChange={(e) =>
-                          handleProjectChange(
-                            projectIndex,
-                            "description",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                        rows={2}
-                        placeholder="Project description"
-                      />
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Project Links
-                        </label>
-                        {project.link.map((link, linkIndex) => (
-                          <div
-                            key={linkIndex}
-                            className="flex items-center space-x-2 mb-2"
-                          >
-                            <input
-                              type="url"
-                              value={link}
-                              onChange={(e) =>
-                                handleProjectLinkChange(
-                                  projectIndex,
-                                  linkIndex,
-                                  e.target.value
-                                )
-                              }
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                              placeholder="Project link URL"
-                            />
-                            {project.link.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeProjectLink(projectIndex, linkIndex)
-                                }
-                                className="p-1 text-gray-500 hover:text-red-600 transition-colors"
-                              >
-                                <X size={12} />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => addProjectLink(projectIndex)}
-                          className="flex items-center text-xs text-black hover:text-gray-700 transition-colors"
-                        >
-                          <Plus size={12} className="mr-1" />
-                          Add Link
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={addProject}
-                  className="flex items-center text-black hover:text-gray-700 transition-colors"
-                >
-                  <Plus size={16} className="mr-1" />
-                  Add Project
-                </button>
-              </div>
-            </div>
-
-            {/* Work Experience Section */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Briefcase className="mr-2" size={20} />
-                Work Experience
-              </h3>
-              <div className="space-y-3">
-                {editFormData.work.map((workItem, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={workItem}
-                      onChange={(e) => handleWorkChange(index, e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                      placeholder="Work experience"
-                    />
-                    {editFormData.work.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeWork(index)}
-                        className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addWork}
-                  className="flex items-center text-black hover:text-gray-700 transition-colors text-sm"
-                >
-                  <Plus size={16} className="mr-1" />
-                  Add Work Experience
-                </button>
-              </div>
-            </div>
-
-            {/* Social Links Section */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-4">
-                Social Links
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Github size={16} className="mr-2" />
-                    GitHub
-                  </label>
+        {/* Projects */}
+        <div className="card">
+          <h3>
+            <Code size={18} /> Projects
+          </h3>
+          {editFormData.projects.map((p, pi) => (
+            <div key={pi} className="nested-card">
+              <input
+                type="text"
+                value={p.title}
+                onChange={(e) =>
+                  handleProjectChange(pi, "title", e.target.value)
+                }
+                placeholder="Project title"
+              />
+              <textarea
+                value={p.description}
+                onChange={(e) =>
+                  handleProjectChange(pi, "description", e.target.value)
+                }
+                placeholder="Project description"
+              />
+              {p.link.map((l, li) => (
+                <div key={li} className="inline-input">
                   <input
                     type="url"
-                    value={editFormData.links.github || ""}
+                    value={l}
                     onChange={(e) =>
-                      handleLinksChange("github", e.target.value)
+                      handleProjectLinkChange(pi, li, e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                    placeholder="GitHub profile URL"
+                    placeholder="Project link"
                   />
+                  {p.link.length > 1 && (
+                    <button onClick={() => removeProjectLink(pi, li)}>
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Linkedin size={16} className="mr-2" />
-                    LinkedIn
-                  </label>
-                  <input
-                    type="url"
-                    value={editFormData.links.linkedin || ""}
-                    onChange={(e) =>
-                      handleLinksChange("linkedin", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                    placeholder="LinkedIn profile URL"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Globe size={16} className="mr-2" />
-                    Portfolio
-                  </label>
-                  <input
-                    type="url"
-                    value={editFormData.links.portfolio || ""}
-                    onChange={(e) =>
-                      handleLinksChange("portfolio", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                    placeholder="Portfolio website URL"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+              ))}
               <button
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                onClick={() => setShowEditForm(false)}
+                className="add-btn small"
+                onClick={() => addProjectLink(pi)}
               >
-                Cancel
+                <Plus size={12} /> Add Link
               </button>
-              <button
-                className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-                onClick={handleEditProfile}
-              >
-                Save Changes
-              </button>
+              {editFormData.projects.length > 1 && (
+                <button
+                  className="remove-btn"
+                  onClick={() => removeProject(pi)}
+                >
+                  <X size={14} /> Remove Project
+                </button>
+              )}
             </div>
+          ))}
+          <button className="add-btn" onClick={addProject}>
+            <Plus size={14} /> Add Project
+          </button>
+        </div>
+
+        {/* Work */}
+        <div className="card">
+          <h3>
+            <Briefcase size={18} /> Work Experience
+          </h3>
+          {editFormData.work.map((w, i) => (
+            <div key={i} className="inline-input">
+              <input
+                type="text"
+                value={w}
+                onChange={(e) => handleWorkChange(i, e.target.value)}
+                placeholder="Work experience"
+              />
+              {editFormData.work.length > 1 && (
+                <button onClick={() => removeWork(i)}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+          <button className="add-btn" onClick={addWork}>
+            <Plus size={14} /> Add Work
+          </button>
+        </div>
+
+        {/* Links */}
+        <div className="card">
+          <h3>Social Links</h3>
+          <div className="form-grid">
+            <input
+              type="url"
+              value={editFormData.links.github}
+              onChange={(e) => handleLinksChange("github", e.target.value)}
+              placeholder="GitHub"
+            />
+            <input
+              type="url"
+              value={editFormData.links.linkedin}
+              onChange={(e) => handleLinksChange("linkedin", e.target.value)}
+              placeholder="LinkedIn"
+            />
+            <input
+              type="url"
+              value={editFormData.links.portfolio}
+              onChange={(e) => handleLinksChange("portfolio", e.target.value)}
+              placeholder="Portfolio"
+            />
           </div>
+        </div>
+
+        {/* Action */}
+        <div className="actions">
+          <button className="cancel-btn" onClick={() => setShowEditForm(false)}>
+            Cancel
+          </button>
+          <button
+            className="save-btn"
+            onClick={handleEditProfile}
+            disabled={isLoading}
+          >
+            {isLoading ? "Updating..." : "Save Changes"}
+          </button>
         </div>
       </div>
     </div>

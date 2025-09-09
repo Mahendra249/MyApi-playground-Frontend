@@ -13,9 +13,13 @@ import {
   CircleChevronLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { postData } from "../api/ClientFunction";
+import { toast } from "react-toastify";
 
 const CreateProfile = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -129,9 +133,18 @@ const CreateProfile = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     console.log("Profile Data:", formData);
-    alert("Profile created successfully!");
+    setIsLoading(true);
+    const response = await postData("/createProfile", formData);
+    if (response?.success) {
+      toast.success(response.message || "Profile Created");
+      setIsLoading(false);
+      navigate("/dashboard");
+    } else {
+      toast.error(response?.message || "failed to create profile");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -145,7 +158,7 @@ const CreateProfile = () => {
           cursor: "pointer",
         }}
       >
-        <div onClick={()=>navigate("/")}>
+        <div onClick={() => navigate("/")}>
           <CircleChevronLeft />
         </div>
       </div>
@@ -472,9 +485,10 @@ const CreateProfile = () => {
           <div className="text-center pt-8">
             <button
               onClick={handleSubmit}
+              disabled={isLoading}
               className="bg-black text-white px-12 py-4 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
-              Create Profile
+              {isLoading ? "Creating..." : "Create Profile"}
             </button>
           </div>
         </div>

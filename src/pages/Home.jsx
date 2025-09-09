@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { User, Search, Code } from "lucide-react";
 import "../styles/Home.css";
 import { useNavigate } from "react-router-dom";
+import useSWR from "swr";
+import { fetchData } from "../api/ClientFunction";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("all");
   const navigate = useNavigate();
+  const {data} = useSWR("/profile", fetchData)
+  console.log(data)
 
   const navigateToProfile = () => {
     navigate("/dashboard");
@@ -76,7 +80,7 @@ const Home = () => {
                 <Search size={18} className="search-icon" />
                 <input
                   type="text"
-                  placeholder="Search profiles, projects, or skills..."
+                  placeholder="Search projects, or skills..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -84,16 +88,7 @@ const Home = () => {
                 />
               </div>
 
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
-                className="search-select"
-              >
-                <option value="all">All</option>
-                <option value="profiles">Profiles</option>
-                <option value="projects">Projects</option>
-                <option value="skills">Skills</option>
-              </select>
+             
 
               <button onClick={handleSearch} className="search-btn">
                 Search
@@ -103,14 +98,15 @@ const Home = () => {
 
           {/* Action Buttons */}
           <div className="action-buttons">
-            <button
+           
+            {/* <button
               onClick={() => navigate("/createProfile")}
               className="create-btn"
             >
               Create Profile
-            </button>
+            </button> */}
             <button onClick={() => navigate("/search")} className="browse-btn">
-              Browse Profiles
+              Browse Projects
             </button>
           </div>
 

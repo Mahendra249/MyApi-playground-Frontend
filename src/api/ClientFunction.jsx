@@ -1,5 +1,7 @@
 import axios from "axios";
-export const baseURL = "https://myapi-playground-backend.onrender.com/api";
+export const baseURL =
+  // "https://myapi-playground-backend.onrender.com/api" ||
+  "http://localhost:5000/api";
 if (!baseURL) {
   console.log(
     "> BaseURL error, please check your env file or visit api/ClientFunction.jsx file to see more details..., Thanks!..."
@@ -20,7 +22,7 @@ const handleRequest = async (method, url, data = null, customHeaders = {}) => {
       data,
       headers: {
         ...customHeaders,
-        Authorization: `Bearer ${token}`,
+        // Authorization: `Bearer ${token}`,
       },
     });
     return response?.data;

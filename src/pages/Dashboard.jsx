@@ -8,105 +8,51 @@ import {
   Linkedin,
   ExternalLink,
   Edit,
-  Trash2,
-  MapPin,
-  Calendar,
   CircleChevronLeft,
 } from "lucide-react";
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
+import { fetchData } from "../api/ClientFunction";
+import useSWR from "swr";
 
 const Dashboard = () => {
-  const [profile, setProfile] = useState(null);
-  const [topSkills, setTopSkills] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editFormData, setEditFormData] = useState({});
-
-  useEffect(() => {
-    const mockProfile = {
-      name: "Alex Johnson",
-      email: "alex.johnson@email.com",
-      education: "Master's in Computer Science, Stanford University",
-      workExperience: [
-        {
-          id: 1,
-          company: "Tech Solutions Inc.",
-          position: "Senior Software Engineer",
-          duration: "2021 - Present",
-          location: "San Francisco, CA",
-        },
-        {
-          id: 2,
-          company: "Digital Innovations",
-          position: "Full Stack Developer",
-          duration: "2019 - 2021",
-          location: "New York, NY",
-        },
-      ],
-      projects: [
-        {
-          id: 1,
-          title: "E-Commerce Platform",
-          description:
-            "Developed a scalable online shopping platform with product catalog, cart, payment gateway integration, and admin dashboard.",
-          skills: [
-            "React.js",
-            "Node.js",
-            "Express.js",
-            "MongoDB",
-            "Stripe API",
-          ],
-        },
-        {
-          id: 2,
-          title: "Authentication System (Authify)",
-          description:
-            "Built a secure authentication system with JWT, role-based access control, and MongoDB integration.",
-          skills: ["Node.js", "Express.js", "MongoDB", "JWT", "React.js"],
-        },
-        {
-          id: 3,
-          title: "Portfolio Website",
-          description:
-            "Personal portfolio showcasing projects, skills, and experience with responsive UI and animations.",
-          skills: ["Next.js", "Tailwind CSS", "Framer Motion"],
-        },
-      ],
-      links: {
-        github: "https://github.com/alexjohnson",
-        linkedin: "https://linkedin.com/in/alexjohnson",
-        portfolio: "https://alexjohnson.dev",
-      },
-    };
-
-    const mockTopSkills = [
-      { name: "React", level: 95 },
-      { name: "Node.js", level: 88 },
-      { name: "TypeScript", level: 85 },
-    ];
-
-    setTimeout(() => {
-      setProfile(mockProfile);
-      setTopSkills(mockTopSkills);
-      setEditFormData(mockProfile);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const handleEditProfile = () => {
-    setProfile(editFormData);
-    setShowEditForm(false);
-    alert("Profile updated successfully!");
-  };
-
-  const handleDeleteProfile = () => {
-    if (window.confirm("Are you sure you want to delete your profile?")) {
-      alert("Profile deleted successfully!");
-    }
-  };
   const navigate = useNavigate();
 
+  // API fetch
+  const { data, isLoading } = useSWR("/profile", fetchData);
+  console.log(data)
+
+  // Local state
+  const [profile, setProfile] = useState(null);
+  const [topSkills, setTopSkills] = useState([]);
+
+  // Build profile from API response
+  useEffect(() => {
+    if (data) {
+      const formattedProfile = {
+        name: data?.data?.name,
+        email: data?.data?.email,
+        education: data?.data?.education,
+        workExperience: data?.data?.work || [],
+        projects: data?.data?.projects || [],
+        links: data?.data?.links || {},
+      };
+
+      setProfile(formattedProfile);
+      setTopSkills(data?.data?.skills || []);
+    }
+  }, [data]);
+
+  // Loader
+  if (isLoading || !profile) {
+    return (
+      <div className="dashboard-loader">
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
+  // Link icons
   const getLinkIcon = (type) => {
     switch (type) {
       case "github":
@@ -120,18 +66,10 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="dashboard-loader">
-        <div className="loader"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard">
       <div className="dashboard-container">
-        {/* Header */}
+        {/* Back Button */}
         <div
           className="back-box"
           style={{
@@ -141,13 +79,14 @@ const Dashboard = () => {
             cursor: "pointer",
             position: "absolute",
             left: "1rem",
-            top:"0.6rem"
+            top: "0.6rem",
           }}
+          onClick={() => navigate("/")}
         >
-          <div onClick={() => navigate("/")}>
-            <CircleChevronLeft />
-          </div>
+          <CircleChevronLeft />
         </div>
+
+        {/* Header */}
         <div className="card header-card">
           <div className="header-banner"></div>
           <div className="header-content">
@@ -170,14 +109,14 @@ const Dashboard = () => {
         </div>
 
         <div className="grid">
-          {/* Left Side */}
+          {/* Left */}
           <div className="left">
             {/* Education */}
             <div className="card">
               <h2>
                 <GraduationCap /> Education
               </h2>
-              <p>{profile.education}</p>
+              <p>{profile.education || "Not added yet"}</p>
             </div>
 
             {/* Projects */}
@@ -185,70 +124,87 @@ const Dashboard = () => {
               <h2>
                 <Briefcase /> My Projects
               </h2>
-              {profile.projects.map((project) => (
-                <div key={project.id} className="project">
-                  <h3>{project.title}</h3>
-                  <p className="description">{project.description}</p>
-                  <div className="skills">
-                    {project.skills.map((skill, i) => (
-                      <span key={i} className="skill-tag">
-                        {skill}
-                      </span>
-                    ))}
+              {profile.projects.length > 0 ? (
+                profile.projects.map((project, index) => (
+                  <div key={index} className="project">
+                    <h3>{project.title}</h3>
+                    <p>{project.description}</p>
+
+                    {project.link?.length > 0 && (
+                      <div className="links">
+                        {project.link.map((l, i) => (
+                          <a key={i} href={l} target="_blank" rel="noreferrer">
+                            {l}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p>No projects added yet.</p>
+              )}
             </div>
 
-            {/* Work Experience */}
+            {/* Work */}
             <div className="card">
               <h2>
                 <Briefcase /> Work Experience
               </h2>
-              {profile.workExperience.map((job) => (
-                <div key={job.id} className="job">
-                  <h3>{job.position}</h3>
-                  <p className="company">{job.company}</p>
-                  <p className="details">
-                    <Calendar /> {job.duration} | <MapPin /> {job.location}
-                  </p>
-                </div>
-              ))}
+              {profile.workExperience.length > 0 ? (
+                profile.workExperience.map((job, index) => (
+                  <div key={index} className="job">
+                    <p className="company">{job}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No work experience added yet.</p>
+              )}
             </div>
           </div>
 
-          {/* Right Side */}
+          {/* Right */}
           <div className="right">
-            {/* Top Skills */}
+            {/* Skills */}
             <div className="card">
               <h2>Top Skills</h2>
-              {topSkills.map((skill, i) => (
-                <div key={i} className="skill">
-                  <div className="skill-header">
-                    <span>{skill.name}</span>
-                    <span>{skill.level}%</span>
+              {topSkills.length > 0 ? (
+                topSkills.map((skill, i) => (
+                  <div key={i} className="skill">
+                    <div className="skill-header">
+                      <span>{skill}</span>
+                    </div>
+                    <div className="skill-bar">
+                      <div style={{ width: "83%" }}></div>
+                    </div>
                   </div>
-                  <div className="skill-bar">
-                    <div style={{ width: `${skill.level}%` }}></div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p>No skills added yet.</p>
+              )}
             </div>
 
             {/* Links */}
             <div className="card">
               <h2>Links</h2>
-              {Object.entries(profile.links).map(([type, url]) => (
-                <a
-                  key={type}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link"
-                >
-                  {getLinkIcon(type)} <span>{url.replace("https://", "")}</span>
-                </a>
-              ))}
+              {Object.keys(profile.links).length > 0 ? (
+                Object.entries(profile.links).map(([type, url]) =>
+                  url ? (
+                    <a
+                      key={type}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link"
+                    >
+                      {getLinkIcon(type)}{" "}
+                      <span>{url.replace("https://", "")}</span>
+                    </a>
+                  ) : null
+                )
+              ) : (
+                <p>No links available.</p>
+              )}
             </div>
           </div>
         </div>
