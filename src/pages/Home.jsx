@@ -4,7 +4,7 @@ import "../styles/Home.css";
 import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
 import axios from "axios";
-import { fetchData } from "../api/ClientFunction";
+import { baseURL, fetchData } from "../api/ClientFunction";
 import HealthCheckPopup from "../components/HealthCheckPopup";
 
 const Home = () => {
@@ -15,15 +15,12 @@ const Home = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navigate = useNavigate();
-
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setLoading(true);
     setMessage("");
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/search?q=${searchQuery}`
-      );
+      const res = await axios.get(`${baseURL}/api/search?q=${searchQuery}`);
       setResults(res.data.data);
       setMessage(res.data.message);
     } catch (err) {
