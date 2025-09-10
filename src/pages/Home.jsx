@@ -20,7 +20,7 @@ const Home = () => {
     setLoading(true);
     setMessage("");
     try {
-      const res = await axios.get(`${baseURL}/api/search?q=${searchQuery}`);
+      const res = await axios.get(`${baseURL}/search?q=${searchQuery}`);
       setResults(res.data.data);
       setMessage(res.data.message);
     } catch (err) {
