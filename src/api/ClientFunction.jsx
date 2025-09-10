@@ -1,6 +1,6 @@
 import axios from "axios";
 export const baseURL =
-  // "https://myapi-playground-backend.onrender.com/api" ||
+  "https://myapi-playground-backend-1.onrender.com/api" ||
   "http://localhost:5000/api";
 if (!baseURL) {
   console.log(
