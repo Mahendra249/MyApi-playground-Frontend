@@ -1,26 +1,39 @@
 import React, { useState } from "react";
-import { User, Search, Code } from "lucide-react";
+import { User, Search, Code, Check } from "lucide-react";
 import "../styles/Home.css";
 import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
+import axios from "axios";
 import { fetchData } from "../api/ClientFunction";
+import HealthCheckPopup from "../components/HealthCheckPopup";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState("all");
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
   const navigate = useNavigate();
-  const {data} = useSWR("/profile", fetchData)
-  console.log(data)
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/search?q=${searchQuery}`
+      );
+      setResults(res.data.data);
+      setMessage(res.data.message);
+    } catch (err) {
+      setMessage("Error fetching results.");
+    }
+    setLoading(false);
+  };
 
   const navigateToProfile = () => {
     navigate("/dashboard");
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      console.log(`Searching for "${searchQuery}" in ${searchType}`);
-    }
-    navigate("/search");
   };
 
   const featuredProfiles = [
@@ -29,7 +42,7 @@ const Home = () => {
       role: "Full Stack Developer",
       skills: ["React", "Node.js", "Python"],
       image:
-        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z2lybHN8ZW58MHx8MHx8fDA%3D",
+        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&auto=format&fit=crop&q=60",
     },
     {
       name: "Alex Johnson",
@@ -49,7 +62,6 @@ const Home = () => {
 
   return (
     <div className="home">
-      {/* Navigation */}
       <nav className="navbar">
         <div className="navbar-logo">
           <div className="logo-box">
@@ -64,7 +76,6 @@ const Home = () => {
         </button>
       </nav>
 
-      {/* Hero Section */}
       <div className="hero">
         <div className="hero-card">
           <h1 className="hero-title">Showcase Your Tech Journey</h1>
@@ -73,44 +84,105 @@ const Home = () => {
             opportunities. The ultimate platform for tech professionals.
           </p>
 
-          {/* Search Bar */}
-          <div className="search-box">
-            <div className="search-grid">
-              <div className="search-input-wrapper">
-                <Search size={18} className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search projects, or skills..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="search-input"
-                />
+          <div className="filter-option">
+            <div className="search-box">
+              <div className="search-grid">
+                <div className="search-input-wrapper">
+                  <Search size={18} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search here..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="search-input"
+                  />
+                </div>
+                <button onClick={handleSearch} className="search-btn">
+                  Search
+                </button>
               </div>
+            </div>
 
-             
-
-              <button onClick={handleSearch} className="search-btn">
-                Search
+            <div className="action-buttons">
+              {" "}
+              {/* <button onClick={() => navigate("/createProfile")} className="create-btn" > Create Profile </button> */}{" "}
+              <button
+                onClick={() => navigate("/search")}
+                className="browse-btn"
+              >
+                Browse Projects
+              </button>
+              <button onClick={() => setIsOpen(true)} className="browse-btn">
+                Health Checkup
               </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="action-buttons">
-           
-            {/* <button
-              onClick={() => navigate("/createProfile")}
-              className="create-btn"
-            >
-              Create Profile
-            </button> */}
-            <button onClick={() => navigate("/search")} className="browse-btn">
-              Browse Projects
-            </button>
-          </div>
+          <div className=" mt-8">
+            {loading && <p className="text-gray-500">Searching...</p>}
+            {results && (
+              <div className="space-y-6 result-container">
+                {results.name && (
+                  <div className="result-card">
+                    <h2 className="result-title">Name</h2>
+                    <p>{results.name}</p>
+                  </div>
+                )}
 
-          {/* Featured Profiles */}
+                {results.email && (
+                  <div className="result-card">
+                    <h2 className="result-title">Email</h2>
+                    <p>{results.email}</p>
+                  </div>
+                )}
+
+                {results.education && (
+                  <div className="result-card">
+                    <h2 className="result-title">Education</h2>
+                    <p>{results.education}</p>
+                  </div>
+                )}
+
+                {results.skills?.length > 0 && (
+                  <div className="result-card">
+                    <h2 className="result-title">Skills</h2>
+                    <ul>
+                      {results.skills.map((skill, idx) => (
+                        <li key={idx}>{skill}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {results.projects?.length > 0 && (
+                  <div className="result-card">
+                    <h2 className="result-title">Projects</h2>
+                    {results.projects.map((proj, idx) => (
+                      <div
+                        key={idx}
+                        className="mt-8 border-gray-200 border-2 p-4 "
+                      >
+                        <p className="font-semibold mb-2">{proj.title}</p>
+                        <p className="text-gray-600">{proj.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {results.work?.length > 0 && (
+                  <div className="result-card">
+                    <h2 className="result-title">Work</h2>
+                    <ul>
+                      {results.work.map((w, idx) => (
+                        <li key={idx}>{w}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div>
             <h3 className="featured-title">Featured Tech Professionals</h3>
             <div className="featured-grid">
@@ -141,7 +213,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="stats-grid">
           {[
             { number: "10K+", label: "Profiles" },
@@ -156,6 +227,7 @@ const Home = () => {
           ))}
         </div>
       </div>
+      <HealthCheckPopup isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
   );
 };

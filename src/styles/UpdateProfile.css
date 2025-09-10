@@ -64,6 +64,9 @@ textarea {
   font-size: 14px;
   transition: 0.2s;
 }
+textarea{
+  min-height: 10rem;
+}
 input:focus,
 textarea:focus {
   border-color: #181819;

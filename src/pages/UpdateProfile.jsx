@@ -65,7 +65,7 @@ const UpdateProfile = () => {
     setIsLoading(false);
   };
 
-  // skills
+  
   const handleSkillChange = (i, v) => {
     const s = [...editFormData.skills];
     s[i] = v;
@@ -79,7 +79,6 @@ const UpdateProfile = () => {
       skills: editFormData.skills.filter((_, idx) => idx !== i),
     });
 
-  // work
   const handleWorkChange = (i, v) => {
     const w = [...editFormData.work];
     w[i] = v;
@@ -93,7 +92,7 @@ const UpdateProfile = () => {
       work: editFormData.work.filter((_, idx) => idx !== i),
     });
 
-  // projects
+
   const handleProjectChange = (pi, f, v) => {
     const p = [...editFormData.projects];
     p[pi][f] = v;
@@ -107,28 +106,31 @@ const UpdateProfile = () => {
         { title: "", description: "", link: [""] },
       ],
     });
+
   const removeProject = (i) =>
     setEditFormData({
       ...editFormData,
       projects: editFormData.projects.filter((_, idx) => idx !== i),
     });
+
   const handleProjectLinkChange = (pi, li, v) => {
     const p = [...editFormData.projects];
     p[pi].link[li] = v;
     setEditFormData({ ...editFormData, projects: p });
   };
+
   const addProjectLink = (pi) => {
     const p = [...editFormData.projects];
     p[pi].link.push("");
     setEditFormData({ ...editFormData, projects: p });
   };
+
   const removeProjectLink = (pi, li) => {
     const p = [...editFormData.projects];
     p[pi].link.splice(li, 1);
     setEditFormData({ ...editFormData, projects: p });
   };
 
-  // links
   const handleLinksChange = (t, v) => {
     setEditFormData({
       ...editFormData,
@@ -150,7 +152,6 @@ const UpdateProfile = () => {
       </div>
 
       <div className="updateProfile-body">
-        {/* Basic Info */}
         <div className="form-grid">
           <div className="form-group">
             <label>Name</label>

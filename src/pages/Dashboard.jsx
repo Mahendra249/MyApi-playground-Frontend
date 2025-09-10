@@ -18,17 +18,15 @@ import useSWR from "swr";
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  // API fetch
   const { data, isLoading } = useSWR("/profile", fetchData);
   console.log(data)
-
-  // Local state
+  const [pData, setPData] = useState();
   const [profile, setProfile] = useState(null);
   const [topSkills, setTopSkills] = useState([]);
 
-  // Build profile from API response
   useEffect(() => {
     if (data) {
+      setPData(data);
       const formattedProfile = {
         name: data?.data?.name,
         email: data?.data?.email,
@@ -43,7 +41,6 @@ const Dashboard = () => {
     }
   }, [data]);
 
-  // Loader
   if (isLoading || !profile) {
     return (
       <div className="dashboard-loader">
@@ -51,8 +48,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Link icons
   const getLinkIcon = (type) => {
     switch (type) {
       case "github":
@@ -69,7 +64,6 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-container">
-        {/* Back Button */}
         <div
           className="back-box"
           style={{
@@ -86,7 +80,6 @@ const Dashboard = () => {
           <CircleChevronLeft />
         </div>
 
-        {/* Header */}
         <div className="card header-card">
           <div className="header-banner"></div>
           <div className="header-content">
@@ -109,9 +102,9 @@ const Dashboard = () => {
         </div>
 
         <div className="grid">
-          {/* Left */}
+      
           <div className="left">
-            {/* Education */}
+      
             <div className="card">
               <h2>
                 <GraduationCap /> Education

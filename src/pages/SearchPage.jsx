@@ -1,79 +1,38 @@
-import React, { useState, useEffect } from "react";
-import { Search, X, Filter, CircleChevronLeft } from "lucide-react";
+import React, { useState } from "react";
+import { Search, X, CircleChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import useSWR from "swr";
-
-// API base
-const API_BASE = "https://myapi-playground-backend.onrender.com/api";
-
-// SWR fetcher
-const fetcher = (url) => axios.get(`${API_BASE}${url}`).then((res) => res.data);
+import { fetchData } from "../api/ClientFunction";
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchFilter, setSearchFilter] = useState("all");
-  const [searchResults, setSearchResults] = useState([]);
-
-  const [topSkills, setTopSkills] = useState([]);
-  const [projectsBySkill, setProjectsBySkill] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showTopSkills, setShowTopSkills] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState(null);
 
   const navigate = useNavigate();
 
-  // 🔹 SWR hook for searching profiles/projects
   const { data, error, isLoading } = useSWR(
-    searchQuery ? `/search?q=${searchQuery}` : null,
-    fetcher
+    searchQuery ? `/projects?skill=${searchQuery}` : null,
+    fetchData
   );
 
-  console.log(data)
-  // Update results when SWR data changes
-  useEffect(() => {
-    if (data?.data) {
-      if (searchFilter === "projects") {
-        setSearchResults(data.data.projects || []);
-      } else {
-        // Combine all types for "all"
-        setSearchResults([
-          ...(data.data.skills || []),
-          ...(data.data.projects || []),
-          ...(data.data.work || []),
-        ]);
-      }
-    } else {
-      setSearchResults([]);
-    }
-  }, [data, searchFilter]);
+  const {
+    data: topSkillData,
+    error: skillError,
+    isLoading: skillIsLoading,
+  } = useSWR(showTopSkills ? `/skills/top` : null, fetchData);
 
-  // 🔹 Top Skills API
-  const fetchTopSkills = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/skills/top`);
-      setTopSkills(res.data.data || res.data || []);
-    } catch (error) {
-      console.error("Top Skills API Error:", error);
-    }
-  };
+  const projects = data?.data || [];
 
-  // 🔹 Projects by Skill API
-  const fetchProjectsBySkill = async (skill) => {
-    try {
-      const res = await axios.get(`${API_BASE}/projects?skill=${skill}`);
-      setProjectsBySkill(res.data.data || res.data || []);
-    } catch (error) {
-      console.error("Projects by Skill API Error:", error);
-    }
-  };
-
-  // 🔹 Highlight matches
   const highlightText = (text, query) => {
     if (!query || typeof text !== "string") return text;
     const regex = new RegExp(`(${query})`, "gi");
-    const parts = text.split(regex);
-    return parts.map((part, i) =>
+    return text.split(regex).map((part, i) =>
       regex.test(part) ? (
-        <span key={i} className="bg-yellow-200 text-black font-semibold">
+        <span
+          key={i}
+          className="bg-gray-200 text-black font-semibold rounded px-1"
+        >
           {part}
         </span>
       ) : (
@@ -82,203 +41,144 @@ const SearchPage = () => {
     );
   };
 
+  const handleSkillClick = (skill) => {
+    setSelectedSkill(skill);
+    setSearchQuery(skill);
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Back button */}
-      <div
-        className="back-box"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          cursor: "pointer",
-          position: "absolute",
-          left: "2rem",
-          top: "2rem",
-          color: "white",
-        }}
-      >
-        <div onClick={() => navigate("/")}>
-          <CircleChevronLeft />
-        </div>
+      <div className="absolute left-6 top-6">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 shadow hover:bg-gray-200 transition"
+        >
+          <CircleChevronLeft size={18} className="text-gray-700" />
+          <span className="text-sm font-medium text-gray-700">Back</span>
+        </button>
       </div>
 
-      {/* Header */}
-      <div className="bg-black text-white py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            Search Profiles & Projects
-          </h1>
-          <p className="text-gray-300 text-lg">
-            Find developers by skills, projects, or work experience
-          </p>
-        </div>
+      <div className="bg-black text-white py-16 text-center rounded-b-3xl shadow-md">
+        <h1 className="text-4xl font-extrabold tracking-tight">
+          Search Projects
+        </h1>
+        <p className="text-gray-400 mt-2">Find work by skills or projects 🚀</p>
       </div>
 
-      {/* Search Section */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200 mb-8">
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent transition-all text-lg"
-                  placeholder="Search by skill, project, or work..."
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    <X size={20} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Filters + Count */}
-          <div className="flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="bg-gray-50 rounded-2xl shadow p-6 relative border border-gray-200">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setSelectedSkill(null);
+            }}
+            className="w-full pl-12 pr-12 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black text-lg placeholder-gray-400"
+            placeholder="Search by skill..."
+          />
+          {searchQuery && (
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
             >
-              <Filter size={16} />
-              <span>Filters</span>
+              <X size={20} />
             </button>
-
-            {searchResults.length > 0 && (
-              <div className="text-gray-600">
-                Found {searchResults.length} result
-                {searchResults.length !== 1 ? "s" : ""}
-              </div>
-            )}
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-              <span className="text-sm font-medium text-gray-700">
-                Search in:
-              </span>
-              <label className="ml-4">
-                <input
-                  type="radio"
-                  name="filter"
-                  value="all"
-                  checked={searchFilter === "all"}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                />
-                All
-              </label>
-              <label className="ml-4">
-                <input
-                  type="radio"
-                  name="filter"
-                  value="projects"
-                  checked={searchFilter === "projects"}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                />
-                Projects Only
-              </label>
-            </div>
           )}
+          <Search className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
 
-        {/* Loading & Error */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600">Searching...</p>
-          </div>
-        )}
-        {error && (
-          <div className="text-center py-12 text-red-500">
-            Error fetching search results.
-          </div>
-        )}
-
-        {/* Results */}
-        {!isLoading && !error && searchResults.length === 0 && searchQuery && (
-          <div className="text-center py-12">
-            <Search className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-500">
-              Try different keywords or check your spelling
-            </p>
-          </div>
-        )}
-
-        {!isLoading && searchResults.length > 0 && (
-          <div className="space-y-6">
-            {searchResults.map((item, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <h3 className="text-xl font-bold text-black">
-                  {highlightText(item.title || item, searchQuery)}
-                </h3>
-                {item.description && (
-                  <p className="text-gray-600">
-                    {highlightText(item.description, searchQuery)}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 🔹 Top Skills Section */}
-        <div className="mt-12">
+        <div className="mt-8">
           <button
-            onClick={fetchTopSkills}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+            onClick={() => setShowTopSkills(true)}
+            className="bg-black text-white px-6 py-3 rounded-xl font-semibold shadow hover:bg-gray-800 transition"
           >
-            Show Top 3 Skills
+            Show Top Skills
           </button>
 
-          {topSkills.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold">Top Skills</h3>
-              <div className="flex gap-3 mt-3">
-                {topSkills.map((skill, i) => (
-                  <button
-                    key={i}
-                    onClick={() => fetchProjectsBySkill(skill)}
-                    className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    {skill}
-                  </button>
-                ))}
-              </div>
+          {skillIsLoading && (
+            <p className="mt-4 text-gray-600">⏳ Loading top skills...</p>
+          )}
+          {skillError && (
+            <p className="mt-4 text-red-500">Error loading skills</p>
+          )}
+
+          {topSkillData?.data?.length > 0 && showTopSkills && (
+            <div className="flex gap-3 mt-6 flex-wrap">
+              {topSkillData.data.map((skill, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSkillClick(skill)}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition ${
+                    selectedSkill === skill
+                      ? "bg-black text-white"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {skill}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* 🔹 Projects by Selected Skill */}
-        {projectsBySkill.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold">Projects for Skill</h3>
-            <div className="space-y-4 mt-3">
-              {projectsBySkill.map((proj, i) => (
+        <div className="mt-10">
+          {isLoading && (
+            <div className="text-center text-gray-600">
+              ⏳ Searching projects...
+            </div>
+          )}
+          {error && (
+            <div className="text-center text-red-500">
+              Error fetching projects
+            </div>
+          )}
+
+          {!isLoading && !error && projects.length > 0 && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {projects.map((proj, i) => (
                 <div
                   key={i}
-                  className="bg-gray-50 border border-gray-200 p-4 rounded-lg"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6"
                 >
-                  <h4 className="font-bold">{proj.title}</h4>
-                  <p className="text-gray-600 text-sm">{proj.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {highlightText(proj.title, searchQuery)}
+                  </h3>
+                  <p className="text-gray-600 mt-2">
+                    {highlightText(proj.description, searchQuery)}
+                  </p>
+                  {proj.link?.length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {proj.link.map((lnk, j) => (
+                        <a
+                          key={j}
+                          href={lnk}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-black hover:underline text-sm font-medium"
+                        >
+                          🔗 Link {j + 1}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+
+          {!isLoading && !error && searchQuery && projects.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <Search className="mx-auto h-12 w-12 mb-4 text-gray-400" />
+              <p>
+                No projects found for{" "}
+                <span className="font-semibold text-black">
+                  "{searchQuery}"
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
